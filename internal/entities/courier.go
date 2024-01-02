@@ -18,3 +18,8 @@ const (
 	BikeCourier CourierType = "BIKE"
 	AutoCourier CourierType = "AUTO"
 )
+
+type CourierMeta struct {
+	Income int `json:"income"`
+	Rating int `json:"rating"`
+}
