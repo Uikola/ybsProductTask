@@ -23,5 +23,6 @@ type OrderRepository interface {
 	GetOrder(ctx context.Context, orderID int) (entities.Order, error)
 	GetOrders(ctx context.Context, offset, limit int) ([]entities.Order, error)
 	CompleteOrder(ctx context.Context, completeInfo entities.CompleteOrderInfo) (int, error)
+	GetOrdersByCourier(ctx context.Context, courierID int) ([]entities.Order, error)
 	Exists(ctx context.Context, orderID int) (bool, error)
 }
