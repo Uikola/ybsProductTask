@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
+	"github.com/Uikola/ybsProductTask/internal/entities/types"
 	sl "github.com/Uikola/ybsProductTask/internal/lib/logger"
-	"github.com/Uikola/ybsProductTask/internal/pkg/types"
 	"log/slog"
 	"net/http"
 )

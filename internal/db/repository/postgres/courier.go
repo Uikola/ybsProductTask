@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
-	"github.com/Uikola/ybsProductTask/internal/pkg/types"
+	"github.com/Uikola/ybsProductTask/internal/entities/types"
 	"github.com/lib/pq"
 )
 

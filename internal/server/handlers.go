@@ -22,4 +22,5 @@ func Router(db *sql.DB, router chi.Router, log *slog.Logger) {
 		r.Get("/orders", order.GetOrders(orderRepository, log))
 		r.Put("/orders/complete", order.CompleteOrder(orderRepository, log))
 	})
+
 }

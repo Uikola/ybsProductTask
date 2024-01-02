@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/Uikola/ybsProductTask/internal/pkg/types"
+	"github.com/Uikola/ybsProductTask/internal/entities/types"
 )
 
 type Courier struct {
