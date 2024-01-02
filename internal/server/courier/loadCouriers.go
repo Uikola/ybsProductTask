@@ -3,10 +3,10 @@ package courier
 import (
 	"encoding/json"
 	"errors"
-	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
 	"github.com/Uikola/ybsProductTask/internal/entities/types"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"log/slog"
 	"net/http"
 )
@@ -14,7 +14,7 @@ import (
 var ErrInvalidCourierType = errors.New("invalid courier type")
 var ErrInvalidRegion = errors.New("invalid region")
 
-func LoadCourier(repository repository.CourierRepository, log *slog.Logger) http.HandlerFunc {
+func LoadCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
 			Couriers []struct {
@@ -49,7 +49,7 @@ func LoadCourier(repository repository.CourierRepository, log *slog.Logger) http
 			return
 		}
 
-		err = repository.CreateCouriers(ctx, couriers)
+		err = useCase.CreateCouriers(ctx, couriers)
 		if err != nil {
 			log.Info("failed to save couriers", sl.Err(err))
 			http.Error(w, "internal error", http.StatusInternalServerError)

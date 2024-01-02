@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"log/slog"
@@ -11,7 +12,7 @@ import (
 	"strconv"
 )
 
-func GetCourier(repo repository.CourierRepository, log *slog.Logger) http.HandlerFunc {
+func GetCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -22,7 +23,7 @@ func GetCourier(repo repository.CourierRepository, log *slog.Logger) http.Handle
 			return
 		}
 
-		courier, err := repo.GetCourier(ctx, courierID)
+		courier, err := useCase.GetCourier(ctx, courierID)
 		if err != nil {
 			if errors.Is(err, repository.ErrCourierNotFound) {
 				log.Info("courier not found", sl.Err(err))

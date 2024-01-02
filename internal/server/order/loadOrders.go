@@ -3,10 +3,10 @@ package order
 import (
 	"encoding/json"
 	"errors"
-	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
 	"github.com/Uikola/ybsProductTask/internal/entities/types"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"log/slog"
 	"net/http"
 )
@@ -15,7 +15,7 @@ var ErrInvalidWeight = errors.New("invalid weight")
 var ErrInvalidPrice = errors.New("invalid price")
 var ErrInvalidRegion = errors.New("invalid region")
 
-func LoadOrders(repository repository.OrderRepository, log *slog.Logger) http.HandlerFunc {
+func LoadOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
 			Orders []struct {
@@ -53,7 +53,7 @@ func LoadOrders(repository repository.OrderRepository, log *slog.Logger) http.Ha
 			return
 		}
 
-		err = repository.CreateOrders(ctx, orders)
+		err = useCase.CreateOrders(ctx, orders)
 		if err != nil {
 			log.Info("failed to save orders", sl.Err(err))
 			http.Error(w, "internal error", http.StatusInternalServerError)

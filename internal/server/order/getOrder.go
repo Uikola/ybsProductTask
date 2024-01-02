@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"log/slog"
@@ -11,7 +12,7 @@ import (
 	"strconv"
 )
 
-func GetOrder(repo repository.OrderRepository, log *slog.Logger) http.HandlerFunc {
+func GetOrder(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -22,7 +23,7 @@ func GetOrder(repo repository.OrderRepository, log *slog.Logger) http.HandlerFun
 			return
 		}
 
-		order, err := repo.GetOrder(ctx, orderID)
+		order, err := useCase.GetOrder(ctx, orderID)
 		if err != nil {
 			if errors.Is(err, repository.ErrOrderNotFound) {
 				log.Info("order not found", sl.Err(err))

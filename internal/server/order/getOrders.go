@@ -4,13 +4,14 @@ import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func GetOrders(repo repository.OrderRepository, log *slog.Logger) http.HandlerFunc {
+func GetOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var offset, limit int
 		ctx := r.Context()
@@ -21,7 +22,7 @@ func GetOrders(repo repository.OrderRepository, log *slog.Logger) http.HandlerFu
 			limit = 1
 		}
 
-		couriers, err := repo.GetOrders(ctx, offset, limit)
+		couriers, err := useCase.GetOrders(ctx, offset, limit)
 		if err != nil {
 			if errors.Is(err, repository.ErrNoOrders) {
 				log.Info("no orders", sl.Err(err))

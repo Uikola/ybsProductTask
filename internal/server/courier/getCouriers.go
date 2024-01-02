@@ -4,13 +4,14 @@ import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
+	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func GetCouriers(repo repository.CourierRepository, log *slog.Logger) http.HandlerFunc {
+func GetCouriers(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var offset, limit int
 		ctx := r.Context()
@@ -21,7 +22,7 @@ func GetCouriers(repo repository.CourierRepository, log *slog.Logger) http.Handl
 			limit = 1
 		}
 
-		couriers, err := repo.GetCouriers(ctx, offset, limit)
+		couriers, err := useCase.GetCouriers(ctx, offset, limit)
 		if err != nil {
 			if errors.Is(err, repository.ErrNoCouriers) {
 				log.Info("no couriers", sl.Err(err))
