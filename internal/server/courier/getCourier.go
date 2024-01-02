@@ -3,7 +3,7 @@ package courier
 import (
 	"errors"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
-	sl "github.com/Uikola/ybsProductTask/internal/lib/logger"
+	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"log/slog"

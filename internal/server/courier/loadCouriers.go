@@ -6,7 +6,7 @@ import (
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
 	"github.com/Uikola/ybsProductTask/internal/entities/types"
-	sl "github.com/Uikola/ybsProductTask/internal/lib/logger"
+	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
 	"log/slog"
 	"net/http"
 )

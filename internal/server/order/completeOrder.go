@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Uikola/ybsProductTask/internal/db/repository"
 	"github.com/Uikola/ybsProductTask/internal/entities"
-	sl "github.com/Uikola/ybsProductTask/internal/lib/logger"
+	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"

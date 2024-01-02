@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"github.com/Uikola/ybsProductTask/internal/config"
-	sl "github.com/Uikola/ybsProductTask/internal/lib/logger"
+	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
 	"log/slog"
 )
 
