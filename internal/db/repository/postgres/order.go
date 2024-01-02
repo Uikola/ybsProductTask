@@ -96,6 +96,9 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 
 	rows, err := or.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s:%w", op, repository.ErrNoOrders)
+		}
 		return nil, fmt.Errorf("%s:%w", op, err)
 	}
 
@@ -127,13 +130,6 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 			CourierID:    courierID,
 		}
 		orders = append(orders, order)
-	}
-
-	if rows.Err() != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s:%w", op, repository.ErrNoOrders)
-		}
-		return nil, fmt.Errorf("%s:%w", op, err)
 	}
 
 	return orders, nil
@@ -185,4 +181,42 @@ func (or *OrderRepository) Exists(ctx context.Context, orderID int) (bool, error
 	}
 
 	return false, nil
+}
+
+func (or *OrderRepository) GetOrdersByCourier(ctx context.Context, courierID int) ([]entities.Order, error) {
+	const op = "orderRepository.GetOrdersByCourier"
+
+	query := `
+	SELECT id, price, complete_time, courier_id
+	FROM orders
+	WHERE courier_id = $1`
+
+	rows, err := or.db.QueryContext(ctx, query, courierID)
+
+	if err != nil {
+		return nil, fmt.Errorf("%s:%w", op, err)
+	}
+
+	var id, price int
+	var deliveryTime []types.Interval
+	var completeTime *time.Time
+	var orders []entities.Order
+
+	for rows.Next() {
+		err = rows.Scan(&id, &price, &completeTime, &courierID)
+		if err != nil {
+			return nil, fmt.Errorf("%s:%w", op, err)
+		}
+
+		order := entities.Order{
+			ID:           id,
+			DeliveryTime: deliveryTime,
+			Price:        price,
+			CompleteTime: completeTime,
+			CourierID:    &courierID,
+		}
+		orders = append(orders, order)
+	}
+
+	return orders, nil
 }

@@ -97,6 +97,9 @@ func (cr *CourierRepository) GetCouriers(ctx context.Context, offset, limit int)
 
 	rows, err := cr.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s:%w", op, repository.ErrNoCouriers)
+		}
 		return nil, fmt.Errorf("%s:%w", op, err)
 	}
 	defer rows.Close()
@@ -131,13 +134,6 @@ func (cr *CourierRepository) GetCouriers(ctx context.Context, offset, limit int)
 			WorkingHours: workingHours,
 		}
 		couriers = append(couriers, courier)
-	}
-
-	if rows.Err() != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s:%w", op, repository.ErrNoCouriers)
-		}
-		return nil, fmt.Errorf("%s:%w", op, err)
 	}
 
 	return couriers, nil
