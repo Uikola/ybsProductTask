@@ -1,0 +1,17 @@
+filename: "{{.InterfaceName | snakecase }}_mock.go"
+dir: "{{.InterfaceDir}}/mocks"
+outpkg: "mocks"
+mockname: "Mock{{.InterfaceName}}"
+packages:
+  github.com/Uikola/ybsProductTask/internal/usecase/courier_usecase:
+    interfaces:
+      Repo:
+  github.com/Uikola/ybsProductTask/internal/usecase/order_usecase:
+    interfaces:
+      Repo:
+  github.com/Uikola/ybsProductTask/internal/server/courier:
+    interfaces:
+      UseCase:
+  github.com/Uikola/ybsProductTask/internal/server/order:
+    interfaces:
+      UseCase:
