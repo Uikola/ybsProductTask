@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Uikola/ybsProductTask/internal/db/repository"
-	"github.com/Uikola/ybsProductTask/internal/entities"
-	"github.com/Uikola/ybsProductTask/internal/entities/types"
+	"github.com/Uikola/ybsProductTask/internal/entity"
+	"github.com/Uikola/ybsProductTask/internal/entity/types"
+	"github.com/Uikola/ybsProductTask/internal/errorz"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 	return &OrderRepository{db: db}
 }
 
-func (or *OrderRepository) CreateOrders(ctx context.Context, orders []entities.Order) error {
+func (or *OrderRepository) CreateOrders(ctx context.Context, orders []entity.Order) error {
 	const op = "orderRepository.CreateOrders"
 
 	query := `INSERT INTO orders(weight, region, delivery_time, price) VALUES `
@@ -46,7 +46,7 @@ func (or *OrderRepository) CreateOrders(ctx context.Context, orders []entities.O
 	return nil
 }
 
-func (or *OrderRepository) GetOrder(ctx context.Context, orderID int) (entities.Order, error) {
+func (or *OrderRepository) GetOrder(ctx context.Context, orderID int) (entity.Order, error) {
 	const op = "orderRepository.GetOrder"
 
 	query := `
@@ -64,17 +64,17 @@ func (or *OrderRepository) GetOrder(ctx context.Context, orderID int) (entities.
 	err := row.Scan(&id, &weight, &region, &dtBytes, &price, &completeTime, &courierID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entities.Order{}, fmt.Errorf("%s:%w", op, repository.ErrOrderNotFound)
+			return entity.Order{}, fmt.Errorf("%s:%w", op, errorz.ErrOrderNotFound)
 		}
-		return entities.Order{}, fmt.Errorf("%s:%w", op, err)
+		return entity.Order{}, fmt.Errorf("%s:%w", op, err)
 	}
 
 	err = json.Unmarshal(dtBytes, &deliveryTime)
 	if err != nil {
-		return entities.Order{}, fmt.Errorf("%s: failed to unmarshal hours: %w", op, err)
+		return entity.Order{}, fmt.Errorf("%s: failed to unmarshal hours: %w", op, err)
 	}
 
-	return entities.Order{
+	return entity.Order{
 		ID:           id,
 		Weight:       weight,
 		Region:       region,
@@ -85,7 +85,7 @@ func (or *OrderRepository) GetOrder(ctx context.Context, orderID int) (entities.
 	}, nil
 }
 
-func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]entities.Order, error) {
+func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]entity.Order, error) {
 	const op = "orderRepository.GetOrders"
 
 	query := `
@@ -97,7 +97,7 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 	rows, err := or.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s:%w", op, repository.ErrNoOrders)
+			return nil, fmt.Errorf("%s:%w", op, errorz.ErrNoOrders)
 		}
 		return nil, fmt.Errorf("%s:%w", op, err)
 	}
@@ -107,7 +107,7 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 	var dtBytes []byte
 	var deliveryTime []types.Interval
 	var completeTime *time.Time
-	var orders []entities.Order
+	var orders []entity.Order
 
 	for rows.Next() {
 		err = rows.Scan(&id, &weight, &region, &dtBytes, &price, &completeTime, &courierID)
@@ -120,7 +120,7 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 			return nil, fmt.Errorf("%s: failed to unmarshal delivery time: %w", op, err)
 		}
 
-		order := entities.Order{
+		order := entity.Order{
 			ID:           id,
 			Weight:       weight,
 			Region:       region,
@@ -135,7 +135,7 @@ func (or *OrderRepository) GetOrders(ctx context.Context, offset, limit int) ([]
 	return orders, nil
 }
 
-func (or *OrderRepository) CompleteOrder(ctx context.Context, completeInfo entities.CompleteOrderInfo) (int, error) {
+func (or *OrderRepository) CompleteOrder(ctx context.Context, completeInfo entity.CompleteOrderInfo) (int, error) {
 	const op = "orderRepository.CompleteOrder"
 
 	query := `
@@ -150,7 +150,7 @@ func (or *OrderRepository) CompleteOrder(ctx context.Context, completeInfo entit
 	err := row.Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, fmt.Errorf("%s:%w", op, repository.ErrOrderNotFound)
+			return 0, fmt.Errorf("%s:%w", op, errorz.ErrOrderNotFound)
 		}
 		return 0, fmt.Errorf("%s:%w", op, err)
 	}
@@ -183,7 +183,7 @@ func (or *OrderRepository) Exists(ctx context.Context, orderID int) (bool, error
 	return false, nil
 }
 
-func (or *OrderRepository) GetOrdersByCourier(ctx context.Context, courierID int) ([]entities.Order, error) {
+func (or *OrderRepository) GetOrdersByCourier(ctx context.Context, courierID int) ([]entity.Order, error) {
 	const op = "orderRepository.GetOrdersByCourier"
 
 	query := `
@@ -200,7 +200,7 @@ func (or *OrderRepository) GetOrdersByCourier(ctx context.Context, courierID int
 	var id, price int
 	var deliveryTime []types.Interval
 	var completeTime *time.Time
-	var orders []entities.Order
+	var orders []entity.Order
 
 	for rows.Next() {
 		err = rows.Scan(&id, &price, &completeTime, &courierID)
@@ -208,7 +208,7 @@ func (or *OrderRepository) GetOrdersByCourier(ctx context.Context, courierID int
 			return nil, fmt.Errorf("%s:%w", op, err)
 		}
 
-		order := entities.Order{
+		order := entity.Order{
 			ID:           id,
 			DeliveryTime: deliveryTime,
 			Price:        price,
