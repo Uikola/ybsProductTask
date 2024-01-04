@@ -3,19 +3,18 @@ package order
 import (
 	"encoding/json"
 	"errors"
-
-	"github.com/Uikola/ybsProductTask/internal/entities"
+	"github.com/Uikola/ybsProductTask/internal/entity"
+	"github.com/Uikola/ybsProductTask/internal/errorz"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 )
 
-func CompleteOrder(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
+func CompleteOrder(useCase UseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
-			CompleteInfo entities.CompleteOrderInfo `json:"complete_info"`
+			CompleteInfo entity.CompleteOrderInfo `json:"complete_info"`
 		}
 		ctx := r.Context()
 
@@ -28,7 +27,7 @@ func CompleteOrder(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerF
 
 		order, err := useCase.CompleteOrder(ctx, request.CompleteInfo)
 		if err != nil {
-			if errors.Is(err, usecase.ErrOrderAlreadyExists) {
+			if errors.Is(err, errorz.ErrOrderAlreadyExists) {
 				log.Info("order already complete")
 				http.Error(w, "order already complete", http.StatusBadRequest)
 				return

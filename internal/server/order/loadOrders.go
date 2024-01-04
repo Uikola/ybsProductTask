@@ -2,20 +2,15 @@ package order
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/Uikola/ybsProductTask/internal/entities"
-	"github.com/Uikola/ybsProductTask/internal/entities/types"
+	"github.com/Uikola/ybsProductTask/internal/entity"
+	"github.com/Uikola/ybsProductTask/internal/entity/types"
+	"github.com/Uikola/ybsProductTask/internal/errorz"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"log/slog"
 	"net/http"
 )
 
-var ErrInvalidWeight = errors.New("invalid weight")
-var ErrInvalidPrice = errors.New("invalid price")
-var ErrInvalidRegion = errors.New("invalid region")
-
-func LoadOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
+func LoadOrders(useCase UseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
 			Orders []struct {
@@ -34,10 +29,10 @@ func LoadOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc
 			return
 		}
 
-		var orders []entities.Order
+		var orders []entity.Order
 
 		for _, data := range request.Orders {
-			order := entities.Order{
+			order := entity.Order{
 				Weight:       data.Weight,
 				Region:       data.Region,
 				DeliveryTime: []types.Interval{data.DeliveryTime},
@@ -46,7 +41,7 @@ func LoadOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc
 			orders = append(orders, order)
 		}
 
-		err = validateOrders(orders)
+		err = ValidateOrders(orders)
 		if err != nil {
 			log.Info("failed to validate orders", sl.Err(err))
 			http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
@@ -64,16 +59,19 @@ func LoadOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc
 	}
 }
 
-func validateOrders(orders []entities.Order) error {
+func ValidateOrders(orders []entity.Order) error {
 	for _, order := range orders {
 		if order.Weight < 0 {
-			return ErrInvalidWeight
+			return errorz.ErrInvalidWeight
 		}
 		if order.Price < 0 {
-			return ErrInvalidPrice
+			return errorz.ErrInvalidPrice
 		}
 		if order.Region < 0 {
-			return ErrInvalidRegion
+			return errorz.ErrInvalidRegion
+		}
+		if len(order.DeliveryTime) == 0 {
+			return errorz.ErrInvalidDeliveryTime
 		}
 	}
 	return nil

@@ -2,7 +2,6 @@ package courier
 
 import (
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"log/slog"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func GetMetaInfo(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerFunc {
+func GetMetaInfo(useCase UseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 

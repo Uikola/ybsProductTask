@@ -2,28 +2,24 @@ package courier
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/Uikola/ybsProductTask/internal/entities"
-	"github.com/Uikola/ybsProductTask/internal/entities/types"
+	"github.com/Uikola/ybsProductTask/internal/entity"
+	"github.com/Uikola/ybsProductTask/internal/entity/types"
+	"github.com/Uikola/ybsProductTask/internal/errorz"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"log/slog"
 	"net/http"
 )
 
-var ErrInvalidCourierType = errors.New("invalid courier type")
-var ErrInvalidRegion = errors.New("invalid region")
-
-func LoadCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerFunc {
+func LoadCouriers(useCase UseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
 			Couriers []struct {
-				Type         entities.CourierType `json:"type"`
-				Regions      []int                `json:"regions"`
-				WorkingHours []types.Interval     `json:"working_hours"`
+				Type         entity.CourierType `json:"type"`
+				Regions      []int              `json:"regions"`
+				WorkingHours []types.Interval   `json:"working_hours"`
 			} `json:"couriers"`
 		}
-		var couriers []entities.Courier
+		var couriers []entity.Courier
 		ctx := r.Context()
 
 		err := json.NewDecoder(r.Body).Decode(&request)
@@ -34,7 +30,7 @@ func LoadCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerF
 		}
 
 		for _, data := range request.Couriers {
-			courier := entities.Courier{
+			courier := entity.Courier{
 				Type:         data.Type,
 				Regions:      data.Regions,
 				WorkingHours: data.WorkingHours,
@@ -42,7 +38,7 @@ func LoadCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerF
 			couriers = append(couriers, courier)
 		}
 
-		err = validateCouriers(couriers)
+		err = ValidateCouriers(couriers)
 		if err != nil {
 			log.Info("failed to validate couriers", sl.Err(err))
 			http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
@@ -60,16 +56,28 @@ func LoadCourier(useCase usecase.CourierUseCase, log *slog.Logger) http.HandlerF
 	}
 }
 
-func validateCouriers(couriers []entities.Courier) error {
+func ValidateCouriers(couriers []entity.Courier) error {
 	for _, courier := range couriers {
-		if courier.Type != entities.FootCourier && courier.Type != entities.BikeCourier && courier.Type != entities.AutoCourier {
-			return ErrInvalidCourierType
+		err := ValidateCourier(courier)
+		return err
+	}
+	return nil
+}
+
+func ValidateCourier(courier entity.Courier) error {
+	if !courier.Type.Valid() {
+		return errorz.ErrInvalidCourierType
+	}
+	if len(courier.Regions) == 0 {
+		return errorz.ErrInvalidRegion
+	}
+	for _, region := range courier.Regions {
+		if region < 0 {
+			return errorz.ErrInvalidRegion
 		}
-		for _, region := range courier.Regions {
-			if region < 0 {
-				return ErrInvalidRegion
-			}
-		}
+	}
+	if len(courier.WorkingHours) == 0 {
+		return errorz.ErrInvalidWorkingHours
 	}
 	return nil
 }

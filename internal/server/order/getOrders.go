@@ -2,16 +2,15 @@ package order
 
 import (
 	"errors"
-	"github.com/Uikola/ybsProductTask/internal/db/repository"
+	"github.com/Uikola/ybsProductTask/internal/errorz"
 	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/internal/usecase"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func GetOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc {
+func GetOrders(useCase UseCase, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var offset, limit int
 		ctx := r.Context()
@@ -24,7 +23,7 @@ func GetOrders(useCase usecase.OrderUseCase, log *slog.Logger) http.HandlerFunc 
 
 		couriers, err := useCase.GetOrders(ctx, offset, limit)
 		if err != nil {
-			if errors.Is(err, repository.ErrNoOrders) {
+			if errors.Is(err, errorz.ErrNoOrders) {
 				log.Info("no orders", sl.Err(err))
 				http.Error(w, "no orders", http.StatusNotFound)
 				return
