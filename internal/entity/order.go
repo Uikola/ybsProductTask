@@ -1,7 +1,7 @@
-package entities
+package entity
 
 import (
-	"github.com/Uikola/ybsProductTask/internal/entities/types"
+	"github.com/Uikola/ybsProductTask/internal/entity/types"
 	"time"
 )
 

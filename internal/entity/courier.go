@@ -1,7 +1,7 @@
-package entities
+package entity
 
 import (
-	"github.com/Uikola/ybsProductTask/internal/entities/types"
+	"github.com/Uikola/ybsProductTask/internal/entity/types"
 )
 
 type Courier struct {
@@ -18,6 +18,16 @@ const (
 	BikeCourier CourierType = "BIKE"
 	AutoCourier CourierType = "AUTO"
 )
+
+func (e CourierType) Valid() bool {
+	switch e {
+	case FootCourier,
+		BikeCourier,
+		AutoCourier:
+		return true
+	}
+	return false
+}
 
 type CourierMeta struct {
 	Income int `json:"income"`
