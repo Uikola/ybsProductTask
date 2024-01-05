@@ -1,46 +1,49 @@
 package courier
 
 import (
-	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Uikola/ybsProductTask/internal/usecase/courier_usecase"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 )
 
-func GetMetaInfo(useCase UseCase, log *slog.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func (h Handler) GetMetaInfo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-		courierID, err := strconv.Atoi(chi.URLParam(r, "courier_id"))
-		if err != nil {
-			log.Info("invalid courier id", sl.Err(err))
-			http.Error(w, "invalid request", http.StatusBadRequest)
-			return
-		}
-
-		startDate, err := time.Parse(time.RFC3339, r.URL.Query().Get("start_date"))
-		if err != nil {
-			log.Info("invalid start date", sl.Err(err))
-			http.Error(w, "invalid request", http.StatusBadRequest)
-			return
-		}
-		endDate, err := time.Parse(time.RFC3339, r.URL.Query().Get("end_date"))
-		if err != nil {
-			log.Info("invalid end date", sl.Err(err))
-			http.Error(w, "invalid request", http.StatusBadRequest)
-			return
-		}
-
-		metaInfo, err := useCase.GetMetaInfo(ctx, courierID, startDate, endDate)
-		if err != nil {
-			log.Info("failed to get courier meta info", sl.Err(err))
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		render.JSON(w, r, metaInfo)
+	courierID, err := strconv.Atoi(chi.URLParam(r, "courier_id"))
+	if err != nil {
+		h.log.Error().Err(err).Msg("invalid courier id")
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
 	}
+
+	startDate, err := time.Parse(time.RFC3339, r.URL.Query().Get("start_date"))
+	if err != nil {
+		h.log.Error().Err(err).Msg("invalid start date")
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	endDate, err := time.Parse(time.RFC3339, r.URL.Query().Get("end_date"))
+	if err != nil {
+		h.log.Error().Err(err).Msg("invalid end date")
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	dto := courier_usecase.GetMetaInfoDTO{
+		CourierID: courierID,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	metaInfo, err := h.useCase.GetMetaInfo(ctx, dto)
+	if err != nil {
+		h.log.Error().Err(err).Msg("failed to get courier meta info")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, metaInfo)
 }

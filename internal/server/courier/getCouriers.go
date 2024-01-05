@@ -2,37 +2,39 @@ package courier
 
 import (
 	"errors"
-	"github.com/Uikola/ybsProductTask/internal/errorz"
-	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/go-chi/render"
-	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/Uikola/ybsProductTask/internal/errorz"
+	"github.com/Uikola/ybsProductTask/internal/usecase/courier_usecase"
+	"github.com/go-chi/render"
 )
 
-func GetCouriers(useCase UseCase, log *slog.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var offset, limit int
-		ctx := r.Context()
+func (h Handler) GetCouriers(w http.ResponseWriter, r *http.Request) {
+	var offset, limit int
+	ctx := r.Context()
 
-		offset, _ = strconv.Atoi(r.URL.Query().Get("offset"))
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			limit = 1
-		}
-
-		couriers, err := useCase.GetCouriers(ctx, offset, limit)
-		if err != nil {
-			if errors.Is(err, errorz.ErrNoCouriers) {
-				log.Info("no couriers", sl.Err(err))
-				http.Error(w, "no couriers", http.StatusNotFound)
-				return
-			}
-			log.Info("failed to get couriers", sl.Err(err))
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		render.JSON(w, r, couriers)
+	offset, _ = strconv.Atoi(r.URL.Query().Get("offset"))
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 1
 	}
+	dto := courier_usecase.GetCouriersDTO{
+		Offset: offset,
+		Limit:  limit,
+	}
+
+	couriers, err := h.useCase.GetCouriers(ctx, dto)
+	switch {
+	case errors.Is(err, errorz.ErrNoCouriers):
+		h.log.Error().Err(err).Msg("no couriers")
+		http.Error(w, "no couriers", http.StatusNotFound)
+		return
+	case err != nil:
+		h.log.Error().Err(err).Msg("failed to get couriers")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, couriers)
 }
