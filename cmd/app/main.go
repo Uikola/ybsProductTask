@@ -5,10 +5,10 @@ import (
 	"github.com/Uikola/ybsProductTask/internal/config"
 	"github.com/Uikola/ybsProductTask/internal/db"
 	"github.com/Uikola/ybsProductTask/internal/server"
-	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/Uikola/ybsProductTask/pkg/logger"
+	"github.com/Uikola/ybsProductTask/pkg/zlog"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,16 +19,15 @@ import (
 func main() {
 	cfg := config.MustConfig()
 
-	log := logger.SetupLogger(cfg.Env)
-
-	log.Info("starting application")
+	log := zlog.Default(true, "dev", zerolog.InfoLevel)
+	log.Info().Msg("starting application")
 
 	dataBase := db.InitDB(cfg, log)
 
 	router := chi.NewRouter()
 	server.Router(dataBase, router, log)
 
-	log.Info("starting server")
+	log.Info().Msg("starting server")
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -43,23 +42,23 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Error("failed to start server")
+			log.Error().Err(err).Msg("failed to start server")
 		}
 	}()
 
-	log.Info("server started")
+	log.Info().Msg("server started")
 
 	<-done
 
-	log.Info("stopping server")
+	log.Info().Msg("stopping server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Error("failed to stop server", sl.Err(err))
+		log.Error().Err(err).Msg("failed to stop server")
 		return
 	}
 	defer dataBase.Close()
-	log.Info("server stopped")
+	log.Info().Msg("server stopped")
 }
