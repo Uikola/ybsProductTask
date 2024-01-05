@@ -14,8 +14,8 @@ func (uc UseCaseImpl) GetOrder(ctx context.Context, orderID int) (entity.Order, 
 	return uc.repo.GetOrder(ctx, orderID)
 }
 
-func (uc UseCaseImpl) GetOrders(ctx context.Context, offset, limit int) ([]entity.Order, error) {
-	return uc.repo.GetOrders(ctx, offset, limit)
+func (uc UseCaseImpl) GetOrders(ctx context.Context, dto GetOrdersDTO) ([]entity.Order, error) {
+	return uc.repo.GetOrders(ctx, dto.Offset, dto.Limit)
 }
 
 func (uc UseCaseImpl) CompleteOrder(ctx context.Context, completeInfo entity.CompleteOrderInfo) (int, error) {

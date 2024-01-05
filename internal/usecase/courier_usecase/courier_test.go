@@ -95,6 +95,11 @@ func TestUseCaseImpl_GetMetaInfo(t *testing.T) {
 	ctx := context.Background()
 	repoErr := errors.New("repo err")
 	courierID, startDate, endDate := 1, time.Date(2023, 12, 20, 0, 0, 0, 0, time.UTC), time.Date(2023, 12, 20, 1, 0, 0, 0, time.UTC)
+	dto := courier_usecase.GetMetaInfoDTO{
+		CourierID: courierID,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
 	cases := []struct {
 		name                   string
 		getCourierResp         entity.Courier
@@ -137,7 +142,7 @@ func TestUseCaseImpl_GetMetaInfo(t *testing.T) {
 			}
 
 			useCase := courier_usecase.New(courierRepo, orderRepo)
-			metaInfo, err := useCase.GetMetaInfo(ctx, courierID, startDate, endDate)
+			metaInfo, err := useCase.GetMetaInfo(ctx, dto)
 			require.ErrorIs(t, err, tCase.expErr)
 			require.Equal(t, tCase.expResp, metaInfo)
 		})

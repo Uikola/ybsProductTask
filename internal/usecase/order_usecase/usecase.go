@@ -5,7 +5,12 @@ import (
 	"github.com/Uikola/ybsProductTask/internal/entity"
 )
 
-type Repo interface {
+type GetOrdersDTO struct {
+	Offset int
+	Limit  int
+}
+
+type OrderRepo interface {
 	CreateOrders(ctx context.Context, orders []entity.Order) error
 	GetOrder(ctx context.Context, orderID int) (entity.Order, error)
 	GetOrders(ctx context.Context, offset, limit int) ([]entity.Order, error)
@@ -15,9 +20,9 @@ type Repo interface {
 }
 
 type UseCaseImpl struct {
-	repo Repo
+	repo OrderRepo
 }
 
-func New(repo Repo) *UseCaseImpl {
+func New(repo OrderRepo) *UseCaseImpl {
 	return &UseCaseImpl{repo: repo}
 }

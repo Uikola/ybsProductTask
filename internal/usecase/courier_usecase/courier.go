@@ -14,17 +14,17 @@ func (uc UseCaseImp) GetCourier(ctx context.Context, courierID int) (entity.Cour
 	return uc.courierRepo.GetCourier(ctx, courierID)
 }
 
-func (uc UseCaseImp) GetCouriers(ctx context.Context, offset, limit int) ([]entity.Courier, error) {
-	return uc.courierRepo.GetCouriers(ctx, offset, limit)
+func (uc UseCaseImp) GetCouriers(ctx context.Context, dto GetCouriersDTO) ([]entity.Courier, error) {
+	return uc.courierRepo.GetCouriers(ctx, dto.Offset, dto.Limit)
 }
 
-func (uc UseCaseImp) GetMetaInfo(ctx context.Context, courierID int, startDate, endDate time.Time) (entity.CourierMeta, error) {
-	courier, err := uc.courierRepo.GetCourier(ctx, courierID)
+func (uc UseCaseImp) GetMetaInfo(ctx context.Context, dto GetMetaInfoDTO) (entity.CourierMeta, error) {
+	courier, err := uc.courierRepo.GetCourier(ctx, dto.CourierID)
 	if err != nil {
 		return entity.CourierMeta{}, err
 	}
 
-	orders, err := uc.orderRepo.GetOrdersByCourier(ctx, courierID)
+	orders, err := uc.orderRepo.GetOrdersByCourier(ctx, dto.CourierID)
 	if err != nil {
 		return entity.CourierMeta{}, err
 	}
@@ -37,13 +37,13 @@ func (uc UseCaseImp) GetMetaInfo(ctx context.Context, courierID int, startDate, 
 	incomeC, ratingC := GetC(courier.Type)
 
 	for _, order := range orders {
-		if InTimeSpan(startDate, endDate, *order.CompleteTime) {
+		if InTimeSpan(dto.StartDate, dto.EndDate, *order.CompleteTime) {
 			income += order.Price * incomeC
 			ordersCount++
 		}
 	}
 
-	hoursBetweenStartEnd := CalculateHours(endDate) - CalculateHours(startDate)
+	hoursBetweenStartEnd := CalculateHours(dto.EndDate) - CalculateHours(dto.StartDate)
 	rating = (ordersCount / hoursBetweenStartEnd) * ratingC
 
 	return entity.CourierMeta{Income: income, Rating: rating}, nil
