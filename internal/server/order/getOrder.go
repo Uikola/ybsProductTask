@@ -2,38 +2,35 @@ package order
 
 import (
 	"errors"
-	"github.com/Uikola/ybsProductTask/internal/errorz"
-	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
-	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/Uikola/ybsProductTask/internal/errorz"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 )
 
-func GetOrder(useCase UseCase, log *slog.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func (h Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-		orderID, err := strconv.Atoi(chi.URLParam(r, "order_id"))
-		if err != nil {
-			log.Info("invalid order id", sl.Err(err))
-			http.Error(w, "invalid order id", http.StatusBadRequest)
-			return
-		}
-
-		order, err := useCase.GetOrder(ctx, orderID)
-		if err != nil {
-			if errors.Is(err, errorz.ErrOrderNotFound) {
-				log.Info("order not found", sl.Err(err))
-				http.Error(w, "order not found", http.StatusNotFound)
-				return
-			}
-			log.Info("failed to get an order", sl.Err(err))
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		render.JSON(w, r, order)
+	orderID, err := strconv.Atoi(chi.URLParam(r, "order_id"))
+	if err != nil {
+		h.log.Error().Err(err).Msg("invalid order id")
+		http.Error(w, "invalid order id", http.StatusBadRequest)
+		return
 	}
+
+	order, err := h.useCase.GetOrder(ctx, orderID)
+	switch {
+	case errors.Is(err, errorz.ErrOrderNotFound):
+		h.log.Error().Err(err).Msg("order not found")
+		http.Error(w, "order not found", http.StatusNotFound)
+		return
+	case err != nil:
+		h.log.Error().Err(err).Msg("failed to get an order")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, order)
 }

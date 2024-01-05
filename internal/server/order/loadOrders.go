@@ -2,61 +2,57 @@ package order
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/Uikola/ybsProductTask/internal/entity"
 	"github.com/Uikola/ybsProductTask/internal/entity/types"
 	"github.com/Uikola/ybsProductTask/internal/errorz"
-	sl "github.com/Uikola/ybsProductTask/internal/src/logger"
-	"log/slog"
-	"net/http"
 )
 
-func LoadOrders(useCase UseCase, log *slog.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var request struct {
-			Orders []struct {
-				Weight       int            `json:"weight"`
-				Region       int            `json:"region"`
-				DeliveryTime types.Interval `json:"delivery_time"`
-				Price        int            `json:"price"`
-			} `json:"orders"`
-		}
-		ctx := r.Context()
-
-		err := json.NewDecoder(r.Body).Decode(&request)
-		if err != nil {
-			log.Info("failed to parse the request", sl.Err(err))
-			http.Error(w, "bad json", http.StatusBadRequest)
-			return
-		}
-
-		var orders []entity.Order
-
-		for _, data := range request.Orders {
-			order := entity.Order{
-				Weight:       data.Weight,
-				Region:       data.Region,
-				DeliveryTime: []types.Interval{data.DeliveryTime},
-				Price:        data.Price,
-			}
-			orders = append(orders, order)
-		}
-
-		err = ValidateOrders(orders)
-		if err != nil {
-			log.Info("failed to validate orders", sl.Err(err))
-			http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		err = useCase.CreateOrders(ctx, orders)
-		if err != nil {
-			log.Info("failed to save orders", sl.Err(err))
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
+func (h Handler) LoadOrders(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Orders []struct {
+			Weight       int            `json:"weight"`
+			Region       int            `json:"region"`
+			DeliveryTime types.Interval `json:"delivery_time"`
+			Price        int            `json:"price"`
+		} `json:"orders"`
 	}
+	ctx := r.Context()
+
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		h.log.Error().Err(err).Msg("failed to parse the request")
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+
+	orders := make([]entity.Order, len(request.Orders))
+	for i, data := range request.Orders {
+		order := entity.Order{
+			Weight:       data.Weight,
+			Region:       data.Region,
+			DeliveryTime: []types.Interval{data.DeliveryTime},
+			Price:        data.Price,
+		}
+		orders[i] = order
+	}
+
+	err = ValidateOrders(orders)
+	if err != nil {
+		h.log.Error().Err(err).Msg("failed to validate orders")
+		http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.useCase.CreateOrders(ctx, orders)
+	if err != nil {
+		h.log.Error().Err(err).Msg("failed to save orders")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func ValidateOrders(orders []entity.Order) error {
