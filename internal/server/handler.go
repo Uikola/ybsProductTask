@@ -2,9 +2,9 @@ package server
 
 import (
 	"database/sql"
-
 	"github.com/Uikola/ybsProductTask/internal/db/repository/postgres"
 	"github.com/Uikola/ybsProductTask/internal/server/courier"
+	"github.com/Uikola/ybsProductTask/internal/server/middleware"
 	"github.com/Uikola/ybsProductTask/internal/server/order"
 	"github.com/Uikola/ybsProductTask/internal/usecase/courier_usecase"
 	"github.com/Uikola/ybsProductTask/internal/usecase/order_usecase"
@@ -28,6 +28,7 @@ func Router(db *sql.DB, router chi.Router, log zerolog.Logger) {
 	orderUseCase := order_usecase.New(orderRepository)
 	handler := New(courier.New(courierUseCase, log), order.New(orderUseCase, log))
 
+	router.Use(middleware.RateLimiter)
 	router.Route("/couriers", func(r chi.Router) {
 		r.Post("/", handler.Courier.LoadCouriers)
 		r.Get("/{courier_id}", handler.Courier.GetCourier)
